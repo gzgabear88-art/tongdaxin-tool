@@ -25,21 +25,41 @@ jobs:
       - name: 安装依赖库
         run: |
           pip install -r requirements.txt
+          pip list
 
-      # 4. 使用PyInstaller打包exe
+      # 4. 检查文件结构
+      - name: 检查文件
+        run: |
+          dir
+          dir *.py
+
+      # 5. 使用PyInstaller打包exe
       - name: 打包exe
         run: |
-          pyinstaller --noconfirm --onefile --windowed main.py
+          pyinstaller --version
+          python -c "import sys; print(sys.executable)"
+          pyinstaller --noconfirm --onefile --windowed main.py 2>&1
 
-      # 5. 整理输出文件
-      - name: 整理输出文件
+      # 6. 检查输出
+      - name: 检查输出
         run: |
           if exist "dist" (
-            copy "dist\main.exe" "tongdaxin_tool.exe" /Y
+            dir dist
+          )
+          if exist "build" (
+            dir build
           )
 
-      # 6. 上传exe
+      # 7. 复制exe
+      - name: 复制exe
+        run: |
+          if exist "dist\main.exe" (
+            copy "dist\main.exe" "tongdaxin_tool.exe"
+          )
+
+      # 8. 上传exe
       - name: 上传exe
+        if: exists('tongdaxin_tool.exe')
         uses: actions/upload-artifact@v4
         with:
           name: 通达信自动下载工具_exe
