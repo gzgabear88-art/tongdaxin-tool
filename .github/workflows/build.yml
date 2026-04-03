@@ -46,9 +46,6 @@ jobs:
           if exist "dist" (
             dir dist
           )
-          if exist "build" (
-            dir build
-          )
 
       # 7. 复制exe
       - name: 复制exe
@@ -59,7 +56,6 @@ jobs:
 
       # 8. 上传exe
       - name: 上传exe
-        if: exists('tongdaxin_tool.exe')
         uses: actions/upload-artifact@v4
         with:
           name: 通达信自动下载工具_exe
