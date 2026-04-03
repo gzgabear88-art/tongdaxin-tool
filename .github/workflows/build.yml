@@ -1,0 +1,60 @@
+# ==========================================
+# GitHub Actions 自动构建脚本
+# 作用：当你更新代码时，自动在Windows上构建exe
+# ==========================================
+
+name: 构建通达信工具 exe
+
+on:
+  # 当代码有更新时自动运行
+  push:
+    branches: [ main ]
+  # 也可以手动触发构建
+  workflow_dispatch:
+
+jobs:
+  # 在Windows上构建exe
+  build:
+    runs-on: windows-latest
+    
+    steps:
+      # 1. 下载代码
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      # 2. 安装Python
+      - name: 安装Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      # 3. 安装依赖
+      - name: 安装依赖库
+        run: |
+          pip install -r requirements.txt
+          python Scripts/pywin32_post_install.py 2>/dev/null || echo "跳过pywin32初始化"
+      
+      # 4. 使用PyInstaller打包exe
+      - name: 打包exe
+        run: |
+          pyinstaller --noconfirm --onefile --windowed ^
+            --name "通达信自动下载工具_v1.0.0" ^
+            --paths "src" ^
+            src/main.py
+      
+      # 5. 把exe移动到主目录
+      - name: 整理输出文件
+        run: |
+          if exist "dist" (
+            xcopy "dist\*.exe" "." /Y
+            xcopy "config.ini" "." /Y
+            xcopy "requirements.txt" "." /Y
+          )
+      
+      # 6. 上传exe作为构建产物
+      - name: 上传exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: 通达信自动下载工具_exe
+          path: "*.exe"
+          retention-days: 30
