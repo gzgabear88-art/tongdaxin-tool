@@ -10,7 +10,7 @@
 
 技术方案：
 - 使用 PyAutoGUI 进行鼠标键盘控制
-- 使用 OpenCV 进行图像识别
+- 使用 PyAutoGUI 内置的图像识别功能
 - 每步操作前先验证目标存在，然后再执行
 
 版本: v1.0
@@ -26,19 +26,12 @@ import logging
 import threading
 from typing import Optional, Callable, Dict, Any
 
-# 尝试导入可选依赖
+# 导入自动化操作库
 try:
     import pyautogui
     PYAUTOGUI_AVAILABLE = True
 except ImportError:
     PYAUTOGUI_AVAILABLE = False
-
-try:
-    import cv2
-    import numpy as np
-    OPENCV_AVAILABLE = True
-except ImportError:
-    OPENCV_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +122,7 @@ class AutoOperation:
         """
         在屏幕上查找图像元素
         
-        使用图像识别技术在屏幕上查找指定的图像区域。
+        使用PyAutoGUI的图像识别技术在屏幕上查找指定的图像区域。
         这是实现跨版本兼容性的关键，通过图像匹配而非固定坐标来定位按钮。
         
         Args:
@@ -140,8 +133,8 @@ class AutoOperation:
         Returns:
             tuple: (x, y) 匹配到的位置坐标，未找到返回None
         """
-        if not OPENCV_AVAILABLE:
-            logger.warning("OpenCV未安装，无法使用图像识别功能")
+        if not PYAUTOGUI_AVAILABLE:
+            logger.warning("PyAutoGUI未安装，无法使用图像识别功能")
             return None
         
         # 构建完整的图像路径
@@ -153,53 +146,23 @@ class AutoOperation:
             return None
         
         try:
-            # 读取目标图像
-            target = cv2.imread(full_image_path)
-            if target is None:
-                logger.error(f"无法读取图像: {full_image_path}")
-                return None
+            # 使用PyAutoGUI的图像识别
+            # locateOnScreen 返回 (left, top, width, height)
+            location = pyautogui.locateOnScreen(full_image_path, confidence=confidence)
             
-            # 截取屏幕
-            screenshot = pyautogui.screenshot()
-            screen = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
-            
-            # 模板匹配
-            result = cv2.matchTemplate(screen, target, cv2.TM_CCOEFF_NORMED)
-            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
-            
-            if max_val >= confidence:
+            if location:
                 # 计算图像中心点
-                h, w = target.shape[:2]
-                center_x = max_loc[0] + w // 2
-                center_y = max_loc[1] + h // 2
-                logger.info(f"找到图像 {image_path}, 位置: ({center_x}, {center_y}), 置信度: {max_val:.2f}")
+                center = pyautogui.center(location)
+                center_x, center_y = center
+                logger.info(f"找到图像 {image_path}, 位置: ({center_x}, {center_y})")
                 return (center_x, center_y)
             else:
-                logger.warning(f"未找到图像 {image_path}, 最高置信度: {max_val:.2f}")
+                logger.warning(f"未找到图像 {image_path}")
                 return None
                 
         except Exception as e:
             logger.exception(f"图像识别出错: {e}")
             return None
-
-    def find_text_on_screen(self, text, region=None, timeout=10):
-        """
-        在屏幕上查找文字
-        
-        使用OCR技术（或简化的颜色匹配）在屏幕上查找文字。
-        
-        Args:
-            text: 要查找的文字
-            region: 可选的屏幕区域 (left, top, width, height)
-            timeout: 超时时间
-            
-        Returns:
-            tuple: (x, y) 文字位置坐标，未找到返回None
-        """
-        # TODO: 实现文字识别功能
-        # 目前返回None，实际使用时需要配合图像识别
-        logger.warning(f"文字识别功能暂未实现，请使用图像识别功能")
-        return None
 
     def click_element(self, x, y, button='left', clicks=1, interval=0.1):
         """
