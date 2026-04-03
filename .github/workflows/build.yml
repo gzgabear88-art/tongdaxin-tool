@@ -43,16 +43,16 @@ jobs:
       # 6. 检查输出
       - name: 检查输出
         run: |
-          if exist "dist" (
+          if (Test-Path "dist") {
             dir dist
-          )
+          }
 
       # 7. 复制exe
       - name: 复制exe
         run: |
-          if exist "dist\main.exe" (
+          if (Test-Path "dist\main.exe") {
             copy "dist\main.exe" "tongdaxin_tool.exe"
-          )
+          }
 
       # 8. 上传exe
       - name: 上传exe
