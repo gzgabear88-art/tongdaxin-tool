@@ -500,12 +500,6 @@ class TongDaXinToolApp:
             self.root.after(0, lambda: self.start_button.config(state=tk.NORMAL, text="▶ 开始执行"))
 
     def validate_inputs(self):
-        if not self.username_var.get().strip():
-            messagebox.showerror("错误", "请输入账号")
-            return False
-        if not self.password_var.get().strip():
-            messagebox.showerror("错误", "请输入密码")
-            return False
         if not self.tdx_path_var.get().strip():
             messagebox.showerror("错误", "请选择 TDX 软件路径")
             return False

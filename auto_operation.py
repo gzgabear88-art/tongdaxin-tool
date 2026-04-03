@@ -268,42 +268,47 @@ class AutoOperation:
 
     def step_login(self, username, password, log_callback=None):
         """
-        步骤2: 自动登录
-        
+        步骤2: 自动登录（账号密码都为空时跳过）
+
         Args:
             username: 账号
             password: 密码
             log_callback: 日志回调函数
-            
+
         Returns:
             dict: 包含success和可选的error信息
         """
         self.current_step = 2
         self._log("=" * 50, log_callback)
         self._log("步骤2: 自动登录...", log_callback)
-        
+
+        # 账号密码都为空，跳过登录步骤
+        if not username and not password:
+            self._log("未填写账号密码，跳过自动登录，直接进入", log_callback)
+            return {'success': True, 'skipped': True}
+
         if self._check_stop():
             return {'success': False, 'error': '用户终止'}
-        
+
         try:
             # 查找并点击账号输入框
             account_pos = self.find_element_on_screen("account_input.png")
             if account_pos:
                 self.click_element(*account_pos)
                 self._wait_and_check(0.5)
-            
+
             # 输入账号
             self.type_text(username)
             self._wait_and_check(0.3)
-            
+
             # Tab切换到密码框
             self.press_key('tab')
             self._wait_and_check(0.3)
-            
+
             # 输入密码
             self.type_text(password)
             self._wait_and_check(0.3)
-            
+
             # 点击登录按钮
             login_btn = self.find_element_on_screen("login_button.png")
             if login_btn:
@@ -312,18 +317,18 @@ class AutoOperation:
                 # 如果找不到登录按钮，尝试按回车
                 self._log("未找到登录按钮，尝试按回车", log_callback)
                 self.press_key('enter')
-            
+
             self._log("登录信息已提交，等待登录结果...", log_callback)
-            
+
             # 等待登录完成
             time.sleep(3)
-            
+
             if self._wait_and_check(3):
                 return {'success': False, 'error': '用户终止'}
-            
+
             self._log("登录步骤完成", log_callback)
             return {'success': True}
-            
+
         except Exception as e:
             return {'success': False, 'error': f'登录失败: {str(e)}'}
 
