@@ -26,7 +26,7 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      # 4. PyInstaller打包exe
+      # 4. 使用PyInstaller打包exe
       - name: 打包exe
         run: |
           pyinstaller --noconfirm --onefile --windowed ^
